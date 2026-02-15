@@ -3,10 +3,14 @@ name: Convert TXT to MDX
 on:
   workflow_dispatch:
     inputs:
-      directory:
-        description: 'Directory to convert (default: input)'
+      input_directory:
+        description: 'Input directory (default: input)'
         required: false
         default: 'input'
+      output_directory:
+        description: 'Output directory (default: output)'
+        required: false
+        default: 'output'
   push:
     paths:
       - 'input/**/*.txt'
@@ -27,32 +31,34 @@ jobs:
       - name: Run conversion
         run: |
           echo "🤖 TXT to MDX Converter - Built by Claude (AI)"
-          echo "📂 Converting files in: ${{ github.event.inputs.directory || 'input' }}"
-          node txt-to-mdx.js "${{ github.event.inputs.directory || 'input' }}"
+          echo "📂 Input:  ${{ github.event.inputs.input_directory || 'input' }}"
+          echo "📂 Output: ${{ github.event.inputs.output_directory || 'output' }}"
+          node txt-to-mdx.js "${{ github.event.inputs.input_directory || 'input' }}" "${{ github.event.inputs.output_directory || 'output' }}"
       
       - name: List converted files
         id: list-files
         run: |
           echo "📝 Converted files:"
-          find input -name "*.mdx" -type f 2>/dev/null | while read file; do
+          OUTPUT_DIR="${{ github.event.inputs.output_directory || 'output' }}"
+          find "$OUTPUT_DIR" -name "*.mdx" -type f 2>/dev/null | while read file; do
             echo "  ✅ $file"
           done || echo "  No files found"
           
           # Count files
-          MDX_COUNT=$(find input -name "*.mdx" -type f 2>/dev/null | wc -l || echo "0")
+          MDX_COUNT=$(find "$OUTPUT_DIR" -name "*.mdx" -type f 2>/dev/null | wc -l || echo "0")
           echo "mdx_count=$MDX_COUNT" >> $GITHUB_OUTPUT
       
       - name: Upload converted MDX files
         uses: actions/upload-artifact@v4
         with:
           name: converted-mdx-files-${{ github.run_number }}
-          path: |
-            input/**/*.mdx
-            ${{ github.event.inputs.directory }}/**/*.mdx
+          path: ${{ github.event.inputs.output_directory || 'output' }}/**/*.mdx
           if-no-files-found: warn
       
       - name: Generate summary
         run: |
+          OUTPUT_DIR="${{ github.event.inputs.output_directory || 'output' }}"
+          
           echo "## 🎉 Conversion Complete!" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "🤖 **完全由 AI 构建** - Claude (Anthropic)" >> $GITHUB_STEP_SUMMARY
@@ -60,11 +66,12 @@ jobs:
           echo "### 📊 Conversion Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **Total MDX files generated:** ${{ steps.list-files.outputs.mdx_count }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Source directory:** \`${{ github.event.inputs.directory || 'input' }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Input directory:** \`${{ github.event.inputs.input_directory || 'input' }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Output directory:** \`$OUTPUT_DIR\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📁 Converted Files" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          find input -name "*.mdx" -type f 2>/dev/null | while read file; do
+          find "$OUTPUT_DIR" -name "*.mdx" -type f 2>/dev/null | while read file; do
             echo "- ✅ \`$file\`" >> $GITHUB_STEP_SUMMARY
           done || echo "- No files found" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -76,7 +83,8 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "💡 **Next Steps:**" >> $GITHUB_STEP_SUMMARY
           echo "1. Download the artifacts" >> $GITHUB_STEP_SUMMARY
-          echo "2. Copy the \`.mdx\` files to your blog project" >> $GITHUB_STEP_SUMMARY
-          echo "3. Publish your blog!" >> $GITHUB_STEP_SUMMARY
+          echo "2. Extract and check the \`.mdx\` files in the \`$OUTPUT_DIR\` directory" >> $GITHUB_STEP_SUMMARY
+          echo "3. Copy the files to your blog project" >> $GITHUB_STEP_SUMMARY
+          echo "4. Publish your blog!" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "⚠️ **Reminder:** Please check the converted files before publishing." >> $GITHUB_STEP_SUMMARY

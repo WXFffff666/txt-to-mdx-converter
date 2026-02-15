@@ -1,0 +1,128 @@
+---
+title: "测试文件 - 验证所有转换功能"
+date: "2024-01-15"
+summary: "这个文件用于测试转换器的所有功能"
+tags: ["test", "mdx"]
+---
+
+import { VideoPlayer } from '@/components/VideoPlayer'
+import Chart from '@/components/Chart'
+
+# 测试 TXT 到 MDX 转换器
+
+这个文件包含了所有需要测试的功能。
+
+## 1. 测试移除不支持的组件
+
+### VideoPlayer 组件（应该被移除）
+<VideoPlayer src="https://example.com/video.mp4" />
+
+### Chart 组件（应该被移除）
+<Chart data={chartData} type="line" />
+
+### Callout 组件（应该被移除）
+<Callout type="warning">
+这是一个警告信息
+</Callout>
+
+### CustomComponent（应该被移除）
+<CustomComponent prop1="value1" prop2="value2">
+  这里是子内容
+</CustomComponent>
+
+### Interactive 组件（应该被移除）
+<Interactive />
+
+### Demo 组件（应该被移除）
+<Demo title="示例">
+  演示内容
+</Demo>
+
+### Widget 组件（应该被移除）
+<Widget id="widget-1" />
+
+### Player 组件（应该被移除）
+<Player url="https://example.com" />
+
+### Embed 组件（应该被移除）
+<Embed src="https://example.com/embed" />
+
+## 2. 测试 Markdown 基本语法（应该保留）
+
+### 标题测试
+# H1 标题
+## H2 标题
+### H3 标题
+
+### 列表测试
+- 列表项 1
+- 列表项 2
+  - 嵌套列表项 2.1
+  - 嵌套列表项 2.2
+- 列表项 3
+
+1. 有序列表 1
+2. 有序列表 2
+3. 有序列表 3
+
+### 代码块测试
+```javascript
+function hello() {
+  console.log("Hello, World!");
+}
+
+const add = (a, b) => a + b;
+```
+
+```python
+def greet(name):
+    return f"Hello, {name}!"
+
+print(greet("World"))
+```
+
+### 链接和图片测试
+[这是一个链接](https://example.com)
+
+![这是一张图片](https://example.com/image.jpg)
+
+### 引用测试
+> 这是一段引用文字
+> 可以有多行
+
+### 粗体和斜体
+**这是粗体文字**
+*这是斜体文字*
+***这是粗斜体文字***
+
+### 表格测试
+| 列1 | 列2 | 列3 |
+|-----|-----|-----|
+| A   | B   | C   |
+| 1   | 2   | 3   |
+
+## 3. 测试代码块修复
+
+下面是一个未闭合的代码块：
+```javascript
+function test() {
+  console.log("这个代码块没有闭合");
+
+// 转换器应该自动添加闭合标记
+
+## 4. 测试 Front Matter
+
+Front Matter 已经存在，应该保持不变。
+
+## 5. 测试 import 语句移除
+
+文件开头的 import 语句应该被移除。
+
+## 总结
+
+转换后应该：
+- ✅ 移除所有 import 语句
+- ✅ 移除所有不支持的组件
+- ✅ 保留所有 Markdown 语法
+- ✅ 修复未闭合的代码块
+- ✅ 保持 Front Matter 不变

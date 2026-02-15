@@ -7,8 +7,8 @@
     "txt-to-mdx": "./txt-to-mdx.js"
   },
   "scripts": {
-    "convert": "node txt-to-mdx.js input",
-    "test": "node txt-to-mdx.js examples"
+    "convert": "node txt-to-mdx.js input output",
+    "test": "node txt-to-mdx.js examples output"
   },
   "keywords": [
     "mdx",

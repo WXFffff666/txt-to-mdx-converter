@@ -3,10 +3,13 @@ node_modules/
 package-lock.json
 yarn.lock
 
-# Output
+# Output directory
+output/
+!output/.gitkeep
+
+# Generated MDX files
 *.mdx
 !examples/*.mdx
-!input/.gitkeep
 
 # Logs
 logs

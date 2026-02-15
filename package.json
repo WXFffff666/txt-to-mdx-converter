@@ -1,7 +1,7 @@
 {
   "name": "txt-to-mdx-converter",
   "version": "1.0.0",
-  "description": "🤖 Write your blog in MDX syntax using .txt files, then convert to .mdx for publishing. Auto-cleanup, auto-fix, with ready-to-use GitHub Actions workflow. Built by Claude.",
+  "description": "🤖 Convert .txt files to .mdx format with auto-cleanup (removes unsupported components, fixes code blocks, adds Front Matter). Ready-to-use GitHub Actions workflow. Built by AI (Claude).",
   "main": "txt-to-mdx.js",
   "bin": {
     "txt-to-mdx": "./txt-to-mdx.js"

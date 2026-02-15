@@ -1,0 +1,36 @@
+{
+  "name": "txt-to-mdx-converter",
+  "version": "1.0.0",
+  "description": "🤖 A powerful tool to convert plain text files to MDX format. Built by Claude - Anthropic's AI Assistant.",
+  "main": "txt-to-mdx.js",
+  "bin": {
+    "txt-to-mdx": "./txt-to-mdx.js"
+  },
+  "scripts": {
+    "convert": "node txt-to-mdx.js",
+    "test": "node txt-to-mdx.js examples"
+  },
+  "keywords": [
+    "mdx",
+    "markdown",
+    "converter",
+    "txt",
+    "blog",
+    "content",
+    "ai",
+    "claude"
+  ],
+  "author": "Claude (Anthropic's AI Assistant)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YOUR_USERNAME/txt-to-mdx-converter.git"
+  },
+  "bugs": {
+    "url": "https://github.com/YOUR_USERNAME/txt-to-mdx-converter/issues"
+  },
+  "homepage": "https://github.com/YOUR_USERNAME/txt-to-mdx-converter#readme",
+  "engines": {
+    "node": ">=12.0.0"
+  }
+}

@@ -1,0 +1,31 @@
+# Simple Blog Post
+
+This is a simple blog post without Front Matter. The converter will automatically add it!
+
+## Introduction
+
+When you don't include Front Matter, the converter will create a default one with:
+- A placeholder title
+- Today's date
+- An empty summary field
+
+## Content
+
+You can write your content normally:
+
+- Lists work fine
+- Code blocks work too
+- Everything is preserved
+
+### Code Example
+
+```python
+def greet(name):
+    return f"Hello, {name}!"
+
+print(greet("World"))
+```
+
+## Conclusion
+
+The converter makes it easy to work with both formats. Just write your content and let the tool handle the rest!

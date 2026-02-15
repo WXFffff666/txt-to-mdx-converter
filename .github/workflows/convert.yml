@@ -1,0 +1,41 @@
+name: Convert TXT to MDX
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'data/blog/**/*.txt'
+
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      
+      - name: Run conversion
+        run: |
+          echo "🤖 TXT to MDX Converter - Built by Claude"
+          node txt-to-mdx.js data/blog
+      
+      - name: Upload converted files
+        uses: actions/upload-artifact@v4
+        with:
+          name: converted-mdx-files
+          path: data/blog/**/*.mdx
+          if-no-files-found: warn
+      
+      - name: Generate summary
+        run: |
+          echo "## 🤖 Conversion Summary - Built by Claude" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Converted files:" >> $GITHUB_STEP_SUMMARY
+          find data/blog -name "*.mdx" -type f | while read file; do
+            echo "- \`$file\`" >> $GITHUB_STEP_SUMMARY
+          done

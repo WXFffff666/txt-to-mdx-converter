@@ -27,7 +27,7 @@ It also removes all `import` statements to ensure clean MDX output.
 ### Option 1: Clone the repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/txt-to-mdx-converter.git
+git clone https://github.com/WXFffff666/txt-to-mdx-converter.git
 cd txt-to-mdx-converter
 ```
 
@@ -145,4 +145,4 @@ This tool was built by **Claude**, Anthropic's AI Assistant, to help developers 
 
 ---
 
-**🤖 Built with AI by Claude** | [Report Issues](https://github.com/YOUR_USERNAME/txt-to-mdx-converter/issues)
+**🤖 Built with AI by Claude** | [Report Issues](https://github.com/WXFffff666/txt-to-mdx-converter/issues)

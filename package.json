@@ -1,7 +1,7 @@
 {
   "name": "txt-to-mdx-converter",
   "version": "1.0.0",
-  "description": "🤖 A powerful tool to convert plain text files to MDX format. Built by Claude - Anthropic's AI Assistant.",
+  "description": "🤖 Write your blog in MDX syntax using .txt files, then convert to .mdx for publishing. Auto-cleanup, auto-fix, with ready-to-use GitHub Actions workflow. Built by Claude.",
   "main": "txt-to-mdx.js",
   "bin": {
     "txt-to-mdx": "./txt-to-mdx.js"
@@ -16,7 +16,13 @@
     "converter",
     "txt",
     "blog",
+    "blogging",
     "content",
+    "nextjs",
+    "docusaurus",
+    "gatsby",
+    "github-actions",
+    "workflow",
     "ai",
     "claude"
   ],

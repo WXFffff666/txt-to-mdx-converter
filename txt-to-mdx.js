@@ -197,7 +197,7 @@ function main() {
   console.log(colors.reset);
   
   const args = process.argv.slice(2);
-  const inputDir = args[0] || path.join(process.cwd(), 'data', 'blog');
+  const inputDir = args[0] || path.join(process.cwd(), 'input');
   const outputDir = args[1] || inputDir;
   
   console.log(`${colors.yellow}Input directory:${colors.reset}  ${inputDir}`);

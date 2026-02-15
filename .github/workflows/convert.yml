@@ -4,12 +4,12 @@ on:
   workflow_dispatch:
     inputs:
       directory:
-        description: 'Directory to convert (default: data/blog)'
+        description: 'Directory to convert (default: input)'
         required: false
-        default: 'data/blog'
+        default: 'input'
   push:
     paths:
-      - 'data/blog/**/*.txt'
+      - 'input/**/*.txt'
 
 jobs:
   convert:
@@ -26,45 +26,47 @@ jobs:
       
       - name: Run conversion
         run: |
-          echo "🤖 TXT to MDX Converter - Built by Claude"
-          echo "📂 Converting files in: ${{ github.event.inputs.directory || 'data/blog' }}"
-          node txt-to-mdx.js "${{ github.event.inputs.directory || 'data/blog' }}"
+          echo "🤖 TXT to MDX Converter - Built by Claude (AI)"
+          echo "📂 Converting files in: ${{ github.event.inputs.directory || 'input' }}"
+          node txt-to-mdx.js "${{ github.event.inputs.directory || 'input' }}"
       
       - name: List converted files
         id: list-files
         run: |
           echo "📝 Converted files:"
-          find data/blog -name "*.mdx" -type f | while read file; do
+          find input -name "*.mdx" -type f 2>/dev/null | while read file; do
             echo "  ✅ $file"
-          done
+          done || echo "  No files found"
           
           # Count files
-          MDX_COUNT=$(find data/blog -name "*.mdx" -type f | wc -l)
+          MDX_COUNT=$(find input -name "*.mdx" -type f 2>/dev/null | wc -l || echo "0")
           echo "mdx_count=$MDX_COUNT" >> $GITHUB_OUTPUT
       
       - name: Upload converted MDX files
         uses: actions/upload-artifact@v4
         with:
           name: converted-mdx-files-${{ github.run_number }}
-          path: data/blog/**/*.mdx
+          path: |
+            input/**/*.mdx
+            ${{ github.event.inputs.directory }}/**/*.mdx
           if-no-files-found: warn
       
       - name: Generate summary
         run: |
           echo "## 🎉 Conversion Complete!" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "🤖 **Built by Claude** - Anthropic's AI Assistant" >> $GITHUB_STEP_SUMMARY
+          echo "🤖 **完全由 AI 构建** - Claude (Anthropic)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📊 Conversion Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **Total MDX files generated:** ${{ steps.list-files.outputs.mdx_count }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Source directory:** \`${{ github.event.inputs.directory || 'data/blog' }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Source directory:** \`${{ github.event.inputs.directory || 'input' }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📁 Converted Files" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          find data/blog -name "*.mdx" -type f | while read file; do
+          find input -name "*.mdx" -type f 2>/dev/null | while read file; do
             echo "- ✅ \`$file\`" >> $GITHUB_STEP_SUMMARY
-          done
+          done || echo "- No files found" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📥 Download" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -76,3 +78,5 @@ jobs:
           echo "1. Download the artifacts" >> $GITHUB_STEP_SUMMARY
           echo "2. Copy the \`.mdx\` files to your blog project" >> $GITHUB_STEP_SUMMARY
           echo "3. Publish your blog!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "⚠️ **Reminder:** Please check the converted files before publishing." >> $GITHUB_STEP_SUMMARY

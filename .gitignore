@@ -6,6 +6,7 @@ yarn.lock
 # Output
 *.mdx
 !examples/*.mdx
+!input/.gitkeep
 
 # Logs
 logs

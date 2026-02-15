@@ -2,16 +2,40 @@
 
 🤖 **完全由 AI 构建** - Claude (Anthropic)
 
-一个简单的工具，将 `.txt` 文件转换成 `.mdx` 格式，自动清理不支持的组件，方便发布到博客平台。
+**用 MDX 格式写博客，保存为 .txt 文件，一键转换成 .mdx 上传博客！**
 
 ## 💡 这个工具是做什么的？
 
-如果你需要将文本文件转换成 MDX 格式用于博客发布（Next.js、Docusaurus、Gatsby 等），这个工具可以帮你：
+如果你习惯用 **MDX 格式**写博客内容，但想保存为 `.txt` 文件方便编辑，这个工具可以帮你：
 
-1. 将 `.txt` 文件转换成 `.mdx` 文件
-2. 自动移除不支持的组件和 import 语句
-3. 自动修复格式问题（未闭合的代码块、缺失的 Front Matter 等）
-4. 输出干净、标准的 MDX 文件
+**工作流程：**
+```
+1. 用 MDX 格式写内容 → 保存为 .txt 文件
+2. 运行转换工具
+3. 得到 .mdx 文件 → 上传到博客平台
+```
+
+**为什么需要这个工具？**
+- ✍️ 用 MDX 格式写博客（支持 Markdown + Front Matter + JSX 组件）
+- 💾 保存为 `.txt` 文件（任何编辑器都支持，不会有格式问题）
+- 🔄 自动转换成 `.mdx` 文件
+- 🧹 自动清理不支持的组件和 import 语句
+- 🛠️ 自动修复格式问题（未闭合的代码块、缺失的 Front Matter）
+- 📤 输出干净的 `.mdx` 文件，直接上传到博客（Next.js、Docusaurus、Gatsby 等）
+
+## ⚠️ 重要说明
+
+**这个工具要求：**
+- ✅ 你的 `.txt` 文件必须用 **MDX 格式**编写
+- ✅ 包含 Front Matter（或工具会自动添加）
+- ✅ 可以包含 Markdown 语法、代码块、列表等
+
+**不是：**
+- ❌ 不是把普通纯文本转成 MDX
+- ❌ 不是把 Word 文档转成 MDX
+- ❌ 不是自动生成博客内容
+
+**简单来说：** 你已经用 MDX 格式写好了内容，只是保存成了 `.txt` 文件，这个工具帮你转成 `.mdx` 文件并清理格式。
 
 ## ✨ 支持的功能
 
@@ -59,9 +83,9 @@
 
 ```
 txt-to-mdx-converter/
-├── input/              ← 📥 放置你的 .txt 文件（输入）
+├── input/              ← 📥 放置你用 MDX 格式写的 .txt 文件
 │   └── .gitkeep
-├── output/             ← 📤 转换后的 .mdx 文件（输出）
+├── output/             ← 📤 转换后的 .mdx 文件（可直接上传博客）
 │   └── .gitkeep
 ├── examples/           ← 📚 示例文件
 ├── .github/workflows/  ← 🚀 GitHub Actions 工作流
@@ -69,10 +93,10 @@ txt-to-mdx-converter/
 ```
 
 **规范化的工作流程：**
-1. 将 `.txt` 文件放到 `input/` 目录
+1. 用 MDX 格式写博客内容，保存为 `.txt` 文件，放到 `input/` 目录
 2. 运行转换命令
 3. 从 `output/` 目录获取转换后的 `.mdx` 文件
-4. 文件不会混乱，输入输出分离
+4. 上传 `.mdx` 文件到你的博客平台
 
 ## 🚀 使用方法
 
@@ -86,9 +110,9 @@ txt-to-mdx-converter/
    cd txt-to-mdx-converter
    ```
 
-2. **添加你的 TXT 文件**
+2. **用 MDX 格式写博客，保存为 .txt 文件**
    
-   在 `input/` 目录创建 `.txt` 文件：
+   在 `input/` 目录创建 `.txt` 文件，用 MDX 格式编写：
    
    ```markdown
    ---
@@ -99,7 +123,13 @@ txt-to-mdx-converter/
    
    # 标题
    
-   这是正文内容...
+   这是正文内容，支持所有 Markdown 语法。
+   
+   ## 代码示例
+   
+   ```javascript
+   console.log("Hello, World!");
+   ```
    ```
 
 3. **推送到 GitHub**
@@ -116,6 +146,7 @@ txt-to-mdx-converter/
 5. **下载转换结果**
    - 在 Actions 页面下载 Artifacts
    - 得到转换好的 `.mdx` 文件
+   - 上传到你的博客平台
 
 ### 方式 2：本地使用
 
@@ -126,13 +157,15 @@ txt-to-mdx-converter/
 git clone https://github.com/WXFffff666/txt-to-mdx-converter.git
 cd txt-to-mdx-converter
 
-# 将 .txt 文件放到 input/ 目录
+# 用 MDX 格式写博客，保存为 .txt 文件，放到 input/ 目录
 
 # 运行转换（输出到 output/ 目录）
 npm run convert
 
 # 或直接使用 node
 node txt-to-mdx.js input output
+
+# 从 output/ 目录获取 .mdx 文件，上传到博客
 ```
 
 **自定义路径：**
@@ -144,9 +177,11 @@ node txt-to-mdx.js /path/to/input /path/to/output
 node txt-to-mdx.js /path/to/input
 ```
 
-## 📝 输入格式
+## 📝 输入格式要求
 
-### 推荐格式（带 Front Matter）
+### ✅ 正确的格式（MDX 格式）
+
+**推荐格式（带 Front Matter）：**
 
 ```markdown
 ---
@@ -158,16 +193,23 @@ tags: ["tag1", "tag2"]
 
 # 文章标题
 
-正文内容...
+正文内容，支持所有 Markdown 语法...
+
+## 小标题
+
+- 列表项 1
+- 列表项 2
 
 ## 代码示例
 
 ```javascript
 console.log("Hello");
 ```
+
+**粗体** 和 *斜体*
 ```
 
-### 简单格式（不带 Front Matter）
+**简单格式（不带 Front Matter）：**
 
 ```markdown
 # 文章标题
@@ -184,9 +226,18 @@ summary: ""
 ---
 ```
 
+### ❌ 不支持的格式
+
+- ❌ 纯文本（没有任何 Markdown 格式）
+- ❌ Word 文档内容
+- ❌ HTML 格式
+- ❌ 其他非 MDX 格式的内容
+
 ## 🎯 转换示例
 
 ### 输入文件（input/example.txt）
+
+**用 MDX 格式编写的内容：**
 
 ```markdown
 ---
@@ -208,6 +259,8 @@ function test() {
 ```
 
 ### 输出文件（output/example.mdx）
+
+**转换后的干净 .mdx 文件：**
 
 ```markdown
 ---
@@ -233,6 +286,7 @@ function test() {
 - ✅ 添加了缺失的 `summary` 字段
 - ✅ 修复了未闭合的代码块
 - ✅ 保留了所有 Markdown 内容
+- ✅ 可以直接上传到博客平台
 
 ## 🧪 测试功能
 
@@ -253,28 +307,32 @@ npm run convert
    - 可能存在 bug 或不完善的地方
    - 建议在使用前先用测试文件验证
 
-2. **使用风险**
+2. **使用要求**
+   - 你的 `.txt` 文件必须用 **MDX 格式**编写
+   - 不支持纯文本或其他格式的转换
+
+3. **使用风险**
    - 请在转换前备份你的原始文件
    - 转换后请检查 `output/` 目录的输出结果
    - 不保证 100% 准确转换
 
-3. **适用场景**
+4. **适用场景**
    - 这是一个简单的辅助工具
-   - 适合基本的 TXT 到 MDX 转换需求
+   - 适合已经用 MDX 格式写好内容的用户
    - 复杂的转换可能需要手动调整
 
-4. **无保证**
+5. **无保证**
    - 按"原样"提供，不提供任何明示或暗示的保证
    - 使用本工具产生的任何问题，作者不承担责任
 
-**建议：** 转换后请仔细检查 `output/` 目录的文件，确保符合你的需求。
+**建议：** 转换后请仔细检查 `output/` 目录的文件，确保符合你的需求后再上传到博客。
 
 ## 💡 使用场景
 
-- ✅ 个人博客写作和发布
-- ✅ 批量转换文本文件
+- ✅ 用 MDX 格式写博客，保存为 .txt 方便编辑
+- ✅ 批量转换 MDX 格式的 .txt 文件
 - ✅ 清理和标准化 MDX 文件
-- ✅ 移除不支持的组件
+- ✅ 移除不支持的组件后上传博客
 
 ## 🤝 贡献
 
@@ -288,7 +346,7 @@ MIT License - 详见 [LICENSE](LICENSE) 文件
 
 ## 🙏 关于
 
-这个工具由 **Claude**（Anthropic 的 AI 助手）构建，旨在简化 TXT 到 MDX 的转换流程。
+这个工具由 **Claude**（Anthropic 的 AI 助手）构建，旨在帮助用 MDX 格式写博客的用户，将 .txt 文件转换成 .mdx 文件并上传到博客平台。
 
 作为 AI 生成的项目，它可能不够完美，但希望能对你有所帮助。如果遇到问题，欢迎提 Issue。
 

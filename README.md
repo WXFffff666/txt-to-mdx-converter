@@ -56,12 +56,32 @@
 | `Interactive` | 交互组件 | `<Interactive />` |
 | `Demo` | 演示组件 | `<Demo>...</Demo>` |
 | `Widget` | 小部件 | `<Widget id="..." />` |
-| `Player` | 播放器 | `<Player url="..." />` |
-| `Embed` | 嵌入组件 | `<Embed src="..." />` |
 
 **同时移除：**
 - ✅ 所有 `import` 语句（如 `import { Component } from '@/components'`）
 - ✅ 多余的空行（超过 2 个连续空行）
+
+### ✨ 保留的组件（v1.1.0 新增）
+以下组件会被**完整保留**，因为它们是博客系统支持的标准组件：
+
+| 组件名称 | 说明 | 用途 |
+|---------|------|------|
+| `CodeDiff` | 代码对比显示 | 显示代码的添加/删除行 |
+| `CodeWithLineNumbers` | 带行号的代码块 | 显示代码行号和高亮 |
+| `Mermaid` | Mermaid 图表 | 渲染流程图、时序图等 |
+| `VideoEmbed` | 视频嵌入 | 嵌入 YouTube、Bilibili 等视频 |
+| `Image` | 图片组件 | 支持缩放的图片显示 |
+| `Twemoji` | Emoji 组件 | 显示 Twitter 风格的 emoji |
+
+**使用示例：**
+```markdown
+<CodeDiff language="javascript">
+{`- const oldCode = 'old'
++ const newCode = 'new'`}
+</CodeDiff>
+
+<Mermaid chart={`graph TD; A-->B;`} />
+```
 
 ### 🛠️ 自动修复
 - ✅ 修复未闭合的代码块（自动添加 ` ``` `）

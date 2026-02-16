@@ -1,233 +1,389 @@
-#!/usr/bin/env node
+const fs = require('fs')
+const path = require('path')
+const matter = require('gray-matter')
 
 /**
- * TXT to MDX Converter
- * 🤖 Built by Claude - Anthropic's AI Assistant
- * 
- * Converts plain text files to MDX format with automatic cleanup
- * - Removes unsupported components (VideoPlayer, Chart, Callout, etc.)
- * - Removes import statements
- * - Fixes unclosed code blocks
- * - Ensures proper Front Matter
+ * 增强版 TXT 转 MDX 脚本
+ * 功能：
+ * 1. 扫描 data/blog/ 目录下的所有 .txt 文件并转换为 .mdx 格式
+ * 2. 验证代码块是否正确闭合
+ * 3. 验证 Front Matter 格式
+ * 4. 自动修复常见问题
+ * 5. 🛡️ 自动清理不支持的自定义组件（防止构建失败）
  */
 
-const fs = require('fs');
-const path = require('path');
+const BLOG_DIR = path.join(process.cwd(), 'data', 'blog')
 
-// ANSI color codes for terminal output
+// 颜色输出
 const colors = {
   reset: '\x1b[0m',
-  bright: '\x1b[1m',
-  cyan: '\x1b[36m',
+  red: '\x1b[31m',
   green: '\x1b[32m',
   yellow: '\x1b[33m',
-  red: '\x1b[31m',
-  magenta: '\x1b[35m'
-};
+  blue: '\x1b[34m',
+  cyan: '\x1b[36m',
+}
 
-// Components to remove
-const COMPONENTS_TO_REMOVE = [
-  'VideoPlayer',
-  'Chart',
-  'Callout',
-  'CustomComponent',
-  'Interactive',
-  'Demo',
-  'Widget',
-  'Player',
-  'Embed'
-];
-
-/**
- * Clean MDX content by removing unsupported components and imports
- */
-function cleanMDXContent(content) {
-  let cleaned = content;
-  
-  // Remove import statements
-  cleaned = cleaned.replace(/^import\s+.*?from\s+['"].*?['"];?\s*$/gm, '');
-  
-  // Remove component usage (both self-closing and with children)
-  COMPONENTS_TO_REMOVE.forEach(component => {
-    // Self-closing: <Component />
-    const selfClosingRegex = new RegExp(`<${component}[^>]*?/>`, 'g');
-    cleaned = cleaned.replace(selfClosingRegex, '');
-    
-    // With children: <Component>...</Component>
-    const withChildrenRegex = new RegExp(`<${component}[^>]*?>.*?</${component}>`, 'gs');
-    cleaned = cleaned.replace(withChildrenRegex, '');
-  });
-  
-  // Remove empty lines (more than 2 consecutive)
-  cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
-  
-  return cleaned.trim();
+function log(message, color = 'reset') {
+  console.log(`${colors[color]}${message}${colors.reset}`)
 }
 
 /**
- * Fix unclosed code blocks
+ * 🛡️ 清理不支持的自定义组件
+ * 从根源上防止构建失败
+ */
+function cleanUnsupportedComponents(content) {
+  let cleaned = content
+  let hasChanges = false
+
+  // 1. 移除所有 import 语句
+  const importRegex = /^import\s+.*?from\s+['"].*?['"];?\s*$/gm
+  if (importRegex.test(cleaned)) {
+    cleaned = cleaned.replace(importRegex, '')
+    hasChanges = true
+    log('  🧹 自动移除 import 语句', 'yellow')
+  }
+
+  // 2. 移除自定义组件标签
+  const customComponents = [
+    'VideoPlayer',
+    'Chart',
+    'Callout',
+    'CustomComponent',
+    'Interactive',
+    'Demo',
+    'Widget',
+  ]
+
+  customComponents.forEach((component) => {
+    // 自闭合标签: <Component />
+    const selfClosingRegex = new RegExp(`<${component}[^>]*/>`, 'gs')
+    if (selfClosingRegex.test(cleaned)) {
+      cleaned = cleaned.replace(selfClosingRegex, '')
+      hasChanges = true
+      log(`  🧹 自动移除 <${component} /> 组件`, 'yellow')
+    }
+
+    // 成对标签: <Component>...</Component>
+    const pairedRegex = new RegExp(`<${component}[^>]*>.*?</${component}>`, 'gs')
+    if (pairedRegex.test(cleaned)) {
+      cleaned = cleaned.replace(pairedRegex, '')
+      hasChanges = true
+      log(`  🧹 自动移除 <${component}>...</${component}> 组件`, 'yellow')
+    }
+  })
+
+  // 3. 清理多余的空行
+  cleaned = cleaned.replace(/\n{3,}/g, '\n\n')
+
+  if (hasChanges) {
+    log('  ✅ 已自动清理不支持的组件，确保构建成功', 'green')
+  }
+
+  return cleaned
+}
+
+/**
+ * 递归扫描目录获取所有 .txt 文件
+ */
+function getAllTxtFiles(dir, fileList = []) {
+  const files = fs.readdirSync(dir)
+
+  files.forEach((file) => {
+    const filePath = path.join(dir, file)
+    const stat = fs.statSync(filePath)
+
+    if (stat.isDirectory()) {
+      getAllTxtFiles(filePath, fileList)
+    } else if (path.extname(file) === '.txt') {
+      fileList.push(filePath)
+    }
+  })
+
+  return fileList
+}
+
+/**
+ * 验证代码块是否正确闭合
+ */
+function validateCodeBlocks(content) {
+  const lines = content.split('\n')
+  const codeBlockRegex = /^```/
+  let codeBlockCount = 0
+  let issues = []
+
+  lines.forEach((line) => {
+    if (codeBlockRegex.test(line.trim())) {
+      codeBlockCount++
+    }
+  })
+
+  // 检查代码块是否成对
+  if (codeBlockCount % 2 !== 0) {
+    issues.push({
+      type: 'code-block',
+      message: `代码块未正确闭合（找到 ${codeBlockCount} 个标记，应该是偶数）`,
+      severity: 'error',
+    })
+  }
+
+  return issues
+}
+
+/**
+ * 自动修复代码块问题
  */
 function fixCodeBlocks(content) {
-  const lines = content.split('\n');
-  let inCodeBlock = false;
-  let codeBlockCount = 0;
-  
-  lines.forEach(line => {
-    if (line.trim().startsWith('```')) {
-      inCodeBlock = !inCodeBlock;
-      codeBlockCount++;
+  const lines = content.split('\n')
+  const codeBlockRegex = /^```/
+  let codeBlockCount = 0
+
+  lines.forEach((line) => {
+    if (codeBlockRegex.test(line.trim())) {
+      codeBlockCount++
     }
-  });
-  
-  // If odd number of code block markers, add closing marker
+  })
+
+  // 如果代码块数量是奇数，在末尾添加闭合标记
   if (codeBlockCount % 2 !== 0) {
-    content += '\n```\n';
+    log('  ⚠️  检测到未闭合的代码块，自动添加闭合标记', 'yellow')
+    return content.trim() + '\n```\n'
   }
-  
-  return content;
+
+  return content
 }
 
 /**
- * Ensure proper Front Matter
+ * 验证 Front Matter
  */
-function ensureFrontMatter(content) {
-  if (!content.startsWith('---')) {
-    const frontMatter = `---
-title: "Untitled"
-date: "${new Date().toISOString().split('T')[0]}"
-summary: ""
----
+function validateFrontMatter(frontmatter) {
+  const issues = []
 
-`;
-    return frontMatter + content;
+  // 检查必需字段
+  if (!frontmatter.title) {
+    issues.push({
+      type: 'frontmatter',
+      message: '缺少 title 字段',
+      severity: 'warning',
+    })
   }
-  
-  // Check if summary is empty and fix it
-  const frontMatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
-  if (frontMatterMatch) {
-    let frontMatter = frontMatterMatch[1];
-    if (frontMatter.includes('summary: ""') || frontMatter.includes("summary: ''")) {
-      // Summary is empty, that's fine
-    } else if (!frontMatter.includes('summary:')) {
-      // Add summary field
-      frontMatter += '\nsummary: ""';
-      content = content.replace(/^---\n[\s\S]*?\n---/, `---\n${frontMatter}\n---`);
+
+  if (!frontmatter.date) {
+    issues.push({
+      type: 'frontmatter',
+      message: '缺少 date 字段',
+      severity: 'warning',
+    })
+  }
+
+  // 检查不推荐的字段
+  if (frontmatter.categories) {
+    issues.push({
+      type: 'frontmatter',
+      message: '检测到 categories 字段，建议使用 tags 代替',
+      severity: 'warning',
+    })
+  }
+
+  // 检查 summary 是否为空
+  if (!frontmatter.summary || frontmatter.summary.trim() === '') {
+    issues.push({
+      type: 'frontmatter',
+      message: 'summary 字段为空，建议添加文章摘要以提升 SEO',
+      severity: 'info',
+    })
+  }
+
+  return issues
+}
+
+/**
+ * 从第一行提取标题
+ */
+function extractTitleFromContent(content) {
+  const lines = content.split('\n')
+  for (const line of lines) {
+    const trimmed = line.trim()
+    if (trimmed) {
+      // 移除 markdown 标题符号
+      return trimmed.replace(/^#+\s*/, '').substring(0, 100)
     }
   }
-  
-  return content;
+  return 'Untitled'
 }
 
 /**
- * Convert a single TXT file to MDX
+ * 生成当前日期的 ISO 字符串
  */
-function convertFile(inputPath, outputPath) {
+function getCurrentDate() {
+  return new Date().toISOString().split('T')[0]
+}
+
+/**
+ * 自动生成摘要
+ */
+function generateSummary(content) {
+  // 移除 markdown 标记和代码块
+  const cleanContent = content
+    .replace(/```[\s\S]*?```/g, '') // 移除代码块
+    .replace(/^#+\s+/gm, '') // 移除标题标记
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // 移除链接，保留文本
+    .replace(/[*_~`]/g, '') // 移除格式标记
+    .replace(/\n+/g, ' ') // 合并换行
+    .trim()
+
+  // 提取前 150 个字符作为摘要
+  const summary = cleanContent.substring(0, 150)
+  return summary ? summary + '...' : ''
+}
+
+/**
+ * 转换单个 TXT 文件为 MDX
+ */
+function convertTxtToMdx(txtFilePath) {
   try {
-    let content = fs.readFileSync(inputPath, 'utf-8');
-    
-    // Apply transformations
-    content = ensureFrontMatter(content);
-    content = cleanMDXContent(content);
-    content = fixCodeBlocks(content);
-    
-    // Write output
-    fs.writeFileSync(outputPath, content, 'utf-8');
-    
-    return true;
-  } catch (error) {
-    console.error(`${colors.red}Error converting ${inputPath}:${colors.reset}`, error.message);
-    return false;
-  }
-}
+    log(`\n📄 处理文件: ${path.relative(process.cwd(), txtFilePath)}`, 'cyan')
 
-/**
- * Process directory recursively
- */
-function processDirectory(inputDir, outputDir) {
-  const stats = {
-    total: 0,
-    success: 0,
-    failed: 0
-  };
-  
-  function traverse(dir, outDir) {
-    const entries = fs.readdirSync(dir, { withFileTypes: true });
-    
-    entries.forEach(entry => {
-      const inputPath = path.join(dir, entry.name);
-      const outputPath = path.join(outDir, entry.name);
-      
-      if (entry.isDirectory()) {
-        // Create output directory if it doesn't exist
-        if (!fs.existsSync(outputPath)) {
-          fs.mkdirSync(outputPath, { recursive: true });
-        }
-        traverse(inputPath, outputPath);
-      } else if (entry.isFile() && entry.name.endsWith('.txt')) {
-        stats.total++;
-        const mdxPath = outputPath.replace(/\.txt$/, '.mdx');
-        
-        console.log(`${colors.cyan}Converting:${colors.reset} ${inputPath}`);
-        console.log(`${colors.cyan}       To:${colors.reset} ${mdxPath}`);
-        
-        if (convertFile(inputPath, mdxPath)) {
-          stats.success++;
-          console.log(`${colors.green}✓ Success${colors.reset}\n`);
-        } else {
-          stats.failed++;
-          console.log(`${colors.red}✗ Failed${colors.reset}\n`);
-        }
+    const content = fs.readFileSync(txtFilePath, 'utf-8')
+    const parsed = matter(content)
+
+    let frontmatter = parsed.data
+    let bodyContent = parsed.content
+
+    // 🛡️ 清理不支持的自定义组件（防止构建失败）
+    bodyContent = cleanUnsupportedComponents(bodyContent)
+
+    // 验证代码块
+    const codeBlockIssues = validateCodeBlocks(bodyContent)
+    if (codeBlockIssues.length > 0) {
+      codeBlockIssues.forEach((issue) => {
+        log(`  ⚠️  ${issue.message}`, 'yellow')
+      })
+      // 自动修复
+      bodyContent = fixCodeBlocks(bodyContent)
+    }
+
+    // 如果没有 frontmatter，自动生成
+    if (Object.keys(frontmatter).length === 0) {
+      const title = extractTitleFromContent(bodyContent)
+      const summary = generateSummary(bodyContent)
+
+      frontmatter = {
+        title: title,
+        date: getCurrentDate(),
+        tags: [],
+        summary: summary,
+        draft: false,
       }
-    });
+      log('  ℹ️  自动生成 Front Matter', 'blue')
+    } else {
+      // 验证 Front Matter
+      const fmIssues = validateFrontMatter(frontmatter)
+      if (fmIssues.length > 0) {
+        fmIssues.forEach((issue) => {
+          if (issue.severity === 'error') {
+            log(`  ❌ ${issue.message}`, 'red')
+          } else if (issue.severity === 'warning') {
+            log(`  ⚠️  ${issue.message}`, 'yellow')
+          } else {
+            log(`  ℹ️  ${issue.message}`, 'blue')
+          }
+        })
+      }
+
+      // 自动修复 Front Matter
+      if (!frontmatter.title) {
+        frontmatter.title = extractTitleFromContent(bodyContent)
+        log('  ✓ 自动生成 title', 'green')
+      }
+      if (!frontmatter.date) {
+        frontmatter.date = getCurrentDate()
+        log('  ✓ 自动生成 date', 'green')
+      }
+      if (!frontmatter.tags) {
+        frontmatter.tags = []
+      }
+      if (!frontmatter.summary || frontmatter.summary.trim() === '') {
+        frontmatter.summary = generateSummary(bodyContent)
+        log('  ✓ 自动生成 summary', 'green')
+      }
+      if (frontmatter.draft === undefined) {
+        frontmatter.draft = false
+      }
+
+      // 移除不推荐的字段
+      if (frontmatter.categories) {
+        delete frontmatter.categories
+        log('  ✓ 移除 categories 字段', 'green')
+      }
+    }
+
+    // 生成新的 MDX 内容
+    const mdxContent = matter.stringify(bodyContent, frontmatter)
+
+    // 生成 MDX 文件路径
+    const mdxFilePath = txtFilePath.replace(/\.txt$/, '.mdx')
+
+    // 写入 MDX 文件
+    fs.writeFileSync(mdxFilePath, mdxContent, 'utf-8')
+
+    // 验证生成的 MDX 文件
+    const generatedContent = fs.readFileSync(mdxFilePath, 'utf-8')
+    const generatedIssues = validateCodeBlocks(generatedContent)
+
+    if (generatedIssues.length > 0) {
+      log(`  ❌ 生成的 MDX 文件仍有问题`, 'red')
+      return false
+    }
+
+    log(`  ✅ 转换成功: ${path.basename(mdxFilePath)}`, 'green')
+    return true
+  } catch (error) {
+    log(`  ❌ 转换失败: ${error.message}`, 'red')
+    console.error(error.stack)
+    return false
   }
-  
-  traverse(inputDir, outputDir);
-  return stats;
 }
 
 /**
- * Main function
+ * 主函数
  */
 function main() {
-  console.log(`${colors.bright}${colors.magenta}`);
-  console.log('╔════════════════════════════════════════╗');
-  console.log('║   TXT to MDX Converter                 ║');
-  console.log('║   🤖 Built by Claude                   ║');
-  console.log('╚════════════════════════════════════════╝');
-  console.log(colors.reset);
-  
-  const args = process.argv.slice(2);
-  const inputDir = args[0] || path.join(process.cwd(), 'input');
-  const outputDir = args[1] || path.join(process.cwd(), 'output');
-  
-  console.log(`${colors.yellow}Input directory:${colors.reset}  ${inputDir}`);
-  console.log(`${colors.yellow}Output directory:${colors.reset} ${outputDir}\n`);
-  
-  if (!fs.existsSync(inputDir)) {
-    console.error(`${colors.red}Error: Input directory does not exist: ${inputDir}${colors.reset}`);
-    process.exit(1);
+  log('\n🚀 开始 TXT 转 MDX 转换...\n', 'cyan')
+
+  if (!fs.existsSync(BLOG_DIR)) {
+    log(`❌ 目录不存在: ${BLOG_DIR}`, 'red')
+    return
   }
-  
-  // Create output directory if it doesn't exist
-  if (!fs.existsSync(outputDir)) {
-    fs.mkdirSync(outputDir, { recursive: true });
+
+  const txtFiles = getAllTxtFiles(BLOG_DIR)
+
+  if (txtFiles.length === 0) {
+    log('ℹ️  未找到 TXT 文件', 'blue')
+    return
   }
-  
-  const stats = processDirectory(inputDir, outputDir);
-  
-  console.log(`${colors.bright}${colors.green}Conversion Complete!${colors.reset}`);
-  console.log(`${colors.green}Total files:${colors.reset}    ${stats.total}`);
-  console.log(`${colors.green}Successful:${colors.reset}     ${stats.success}`);
-  if (stats.failed > 0) {
-    console.log(`${colors.red}Failed:${colors.reset}         ${stats.failed}`);
+
+  log(`📁 找到 ${txtFiles.length} 个 TXT 文件`, 'blue')
+
+  let successCount = 0
+  let failCount = 0
+
+  txtFiles.forEach((txtFile) => {
+    if (convertTxtToMdx(txtFile)) {
+      successCount++
+    } else {
+      failCount++
+    }
+  })
+
+  log('\n' + '='.repeat(50), 'cyan')
+  if (failCount === 0) {
+    log(`✅ 转换完成: ${successCount} 成功, ${failCount} 失败`, 'green')
+  } else {
+    log(`⚠️  转换完成: ${successCount} 成功, ${failCount} 失败`, 'yellow')
   }
-  console.log();
+  log('='.repeat(50) + '\n', 'cyan')
 }
 
-// Run if called directly
-if (require.main === module) {
-  main();
-}
-
-// Export for use as module
-module.exports = { convertFile, processDirectory, cleanMDXContent };
+// 执行主函数
+main()

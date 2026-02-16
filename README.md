@@ -44,6 +44,46 @@
 - 递归处理子目录
 - 保留目录结构
 
+### 🎨 支持 32+ MDX 插件（2026-02-16 更新）
+
+转换后的 `.mdx` 文件完全兼容以下插件生态：
+
+#### Remark 插件（12个）- Markdown 处理
+- ✅ **remarkExtractFrontmatter** - 提取 Front Matter
+- ✅ **remarkCodeTitles** - 代码块标题（```javascript:file.js）
+- ✅ **remarkMath** - 数学公式（$E=mc^2$）
+- ✅ **remarkEmoji** - Emoji 短代码（:smile: :heart:）
+- ✅ **remarkMermaid** - Mermaid 图表
+- ✅ **remarkDefinitionList** - 定义列表
+- ✅ **remarkDirective** - 自定义容器块（:::note）
+- ✅ **remarkImgToJsx** - 图片转 JSX
+- ✅ **remarkVideoEmbed** - 视频嵌入（YouTube、Bilibili 等 8 个平台）
+- ✅ **remarkGfm** - GitHub Flavored Markdown（表格、任务列表、删除线、脚注）
+- ✅ **remarkAlert** - GitHub 风格提示块（> [!NOTE]）
+- ✅ **remarkBreaks** - 软换行支持
+
+#### Rehype 插件（8个）- HTML 处理
+- ✅ **rehypeSlug** - 标题 ID
+- ✅ **rehypeAutolinkHeadings** - 标题链接
+- ✅ **rehypeExternalLinks** - 外部链接处理
+- ✅ **rehypeImgSize** - 图片尺寸优化
+- ✅ **rehypeKatex** - 数学公式渲染
+- ✅ **rehypeCitation** - 引用支持
+- ✅ **rehypePrettyCode** - 代码高亮
+- ✅ **rehypePresetMinify** - HTML 压缩
+
+#### MDX 组件（10个）
+- ✅ **Image** - 图片组件（支持缩放）
+- ✅ **Twemoji** - Twitter Emoji
+- ✅ **CodeTitle** - 代码标题
+- ✅ **CodeDiff** - 代码 Diff 显示
+- ✅ **CodeWithLineNumbers** - 带行号的代码块
+- ✅ **Mermaid** - Mermaid 图表
+- ✅ **VideoEmbed** - 视频嵌入
+- ✅ **Link** - 链接组件
+- ✅ **Pre** - 代码块容器（增强）
+- ✅ **TableWrapper** - 表格包装器
+
 ### 🧹 自动清理（移除以下组件）
 转换器会自动移除这些不支持的 React 组件：
 
@@ -87,16 +127,22 @@
 - ✅ 修复未闭合的代码块（自动添加 ` ``` `）
 - ✅ 添加缺失的 Front Matter
 - ✅ 确保 Front Matter 包含必要字段（title, date, summary）
+- ✅ 自动生成 summary（如果为空）
 
 ### 📝 保留的内容
 转换器会**完整保留**所有标准 Markdown 语法：
 - ✅ 标题（`#`, `##`, `###` 等）
 - ✅ 列表（有序、无序、嵌套）
-- ✅ 代码块（带语言标识）
+- ✅ 代码块（带语言标识、带标题）
 - ✅ 链接和图片
-- ✅ 引用块
-- ✅ 粗体、斜体
+- ✅ 引用块（包括 GitHub 风格提示块）
+- ✅ 粗体、斜体、删除线
 - ✅ 表格
+- ✅ 任务列表
+- ✅ 数学公式
+- ✅ Emoji 短代码
+- ✅ Mermaid 图表
+- ✅ 视频链接
 - ✅ 所有其他标准 Markdown 语法
 
 ## 📂 目录结构
